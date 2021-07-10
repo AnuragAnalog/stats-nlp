@@ -3,8 +3,8 @@
 import numpy as np
 import pandas as pd
 
-from collections import defaultdict
 from matplotlib import pyplot as plt
+from collections import defaultdict, Counter, deque
 
 # File paths
 data_path = '../corpura_alnum.txt'
@@ -68,6 +68,35 @@ def calculate_relative_frequency(word_freq):
         relative_freq[k] = v/total_count
 
     return relative_freq
+
+class MarkovModel(object):
+    def __init__(self, n):
+        self.n = n
+        self.model = defaultdict(Counter)
+        self.freqs = Counter()
+        self.buffer = deque(maxlen=self.n)
+    
+    def fit(self, stream):
+        for token in stream:
+            prefix = tuple(self.buffer)
+            self.buffer.append(token)
+            if len(prefix) == self.n:
+                self.freqs[prefix] += 1
+                self.model[prefix][token] += 1
+    
+    def entropy(self, prefix):
+        prefix_freqs = self.model[prefix].values()
+        normalization_factor = self.freqs[prefix]
+        return -np.sum(f/normalization_factor * np.log2(f/normalization_factor) 
+                       for f in prefix_freqs)
+                
+    def entropy_rate(self):
+        normalization_factor = sum(self.freqs.values())
+        unnormalized_rate = np.sum(self.freqs[prefix] * self.entropy(prefix) for prefix in self.freqs)
+        try:
+            return unnormalized_rate/normalization_factor
+        except ZeroDivisionError:
+            return 0
 
 word_freq = word_count(data_path)
 avg_freq = sum(word_freq.values()) / len(word_freq.values())
