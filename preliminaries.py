@@ -1,13 +1,16 @@
 #!/usr/bin/python3
 
+import warnings
 import numpy as np
 import pandas as pd
 
 from matplotlib import pyplot as plt
 from collections import defaultdict, Counter, deque
 
+warnings.filterwarnings("ignore")
+
 # File paths
-data_path = '../corpura_alnum.txt'
+data_path = './raw_data.txt'
 
 def default_count():
     return 0
@@ -29,8 +32,10 @@ def get_word_count_report(word_freq, show=True):
     total_words = sum(word_freq.values())
     count_100words = sum(list(word_freq.values())[:100])
     print(f"Most Common 100 words account to {(count_100words/total_words)*100}% of the corpus")
+
     only_1 = sum([v for v in word_freq.values() if v == 1])
     lessthan_10 = sum([1 for v in word_freq.values() if v <= 10])
+
     print(f"Count of hapax legomena {(only_1/total_unique_words)*100}% of the corpus")
     print(f"About {(lessthan_10/total_unique_words)*100}% of the corpus occur less than 10 times")
 
@@ -69,7 +74,7 @@ def calculate_relative_frequency(word_freq):
 
     return relative_freq
 
-class MarkovModel(object):
+class MarkovChains():
     def __init__(self, n):
         self.n = n
         self.model = defaultdict(Counter)
@@ -80,30 +85,60 @@ class MarkovModel(object):
         for token in stream:
             prefix = tuple(self.buffer)
             self.buffer.append(token)
+
             if len(prefix) == self.n:
                 self.freqs[prefix] += 1
                 self.model[prefix][token] += 1
+        
+        return
     
     def entropy(self, prefix):
         prefix_freqs = self.model[prefix].values()
         normalization_factor = self.freqs[prefix]
+
         return -np.sum(f/normalization_factor * np.log2(f/normalization_factor) 
                        for f in prefix_freqs)
                 
     def entropy_rate(self):
         normalization_factor = sum(self.freqs.values())
         unnormalized_rate = np.sum(self.freqs[prefix] * self.entropy(prefix) for prefix in self.freqs)
+
         try:
             return unnormalized_rate/normalization_factor
         except ZeroDivisionError:
             return 0
 
-word_freq = word_count(data_path)
-avg_freq = sum(word_freq.values()) / len(word_freq.values())
-get_word_count_report(word_freq)
-zipf = zipf_law(word_freq)
-print(zipf.head(50))
-plt.plot(np.log(zipf['Rank']), np.log(zipf['Freq.']))
-plt.show()
-print(freq_count(word_freq))
-print(calculate_relative_frequency(word_freq))
+def make_zipf_plot(zipf):
+    plt.title(r"$ log_e(Frequency)\ vs\ log_e(Rank) $")
+    plt.ylabel(r"$ log_e(Frequency) $")
+    plt.xlabel(r"$ log_e(Rank) $")
+    plt.plot(np.log(zipf['Rank']), np.log(zipf['Freq.']))
+    plt.show()
+
+    return
+
+# Basic
+data_list = []
+with open(data_path, 'r') as fh:
+    for line in fh:
+        data_list.extend(line.split())
+
+if __name__ == '__main__':
+    word_freq = word_count(data_path)
+    avg_freq = sum(word_freq.values()) / len(word_freq.values())
+    get_word_count_report(word_freq)
+    print("done")
+
+    zipf = zipf_law(word_freq)
+    make_zipf_plot(zipf)
+    print("done")
+
+    for i in range(3):
+        mm = MarkovChains(n=i)
+        mm.fit(stream=data_list)
+        rate = mm.entropy_rate()
+        print(f'Entropy Rate of {i}th Order is {rate}')
+
+    # Suppressed the output as it is Huge
+    # print(freq_count(word_freq))
+    # print(calculate_relative_frequency(word_freq))
