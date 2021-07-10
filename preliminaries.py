@@ -15,6 +15,24 @@ data_path = './raw_data.txt'
 def default_count():
     return 0
 
+def make_zipf_plot(zipf):
+    plt.title(r"$ Zipf's\ Law $")
+    plt.ylabel(r"$ log_e(Frequency) $")
+    plt.xlabel(r"$ log_e(Rank) $")
+    plt.plot(np.log(zipf['Rank']), np.log(zipf['Freq.']))
+    plt.show()
+
+    return
+
+def make_bar_plot_from_freq(freqs):
+    plt.title("Word Frequency")
+    plt.xlabel("Words")
+    plt.ylabel("Frequncy")
+    plt.bar(x=freqs.keys(), height=freqs.values())
+    plt.show()
+
+    return
+
 def word_count(data_path):
     word_freq = defaultdict(default_count)
     text = ""
@@ -108,15 +126,6 @@ class MarkovChains():
         except ZeroDivisionError:
             return 0
 
-def make_zipf_plot(zipf):
-    plt.title(r"$ log_e(Frequency)\ vs\ log_e(Rank) $")
-    plt.ylabel(r"$ log_e(Frequency) $")
-    plt.xlabel(r"$ log_e(Rank) $")
-    plt.plot(np.log(zipf['Rank']), np.log(zipf['Freq.']))
-    plt.show()
-
-    return
-
 # Basic
 data_list = []
 with open(data_path, 'r') as fh:
@@ -127,13 +136,11 @@ if __name__ == '__main__':
     word_freq = word_count(data_path)
     avg_freq = sum(word_freq.values()) / len(word_freq.values())
     get_word_count_report(word_freq)
-    print("done")
 
     zipf = zipf_law(word_freq)
     make_zipf_plot(zipf)
-    print("done")
 
-    for i in range(3):
+    for i in range(2):
         mm = MarkovChains(n=i)
         mm.fit(stream=data_list)
         rate = mm.entropy_rate()

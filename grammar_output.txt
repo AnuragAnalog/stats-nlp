@@ -1,0 +1,9 @@
+Time taken in seconds:  730.81126880645752
+Non-Rule based Viterbi Algorithm Accuracy:  82.38794129313764
+
+Time taken in seconds:  715.25398993492126
+Rule Based Viterbi Algorithm Accuracy:  92.70130900436335
+
+Rule based POS Tagging [('Will', 'NOUN'), ('can', 'VERB'), ('see', 'VERB'), ('Marry', 'NOUN')]
+
+Non-Rule based POS Tagging [('Will', 'ADP'), ('can', 'VERB'), ('see', 'VERB'), ('Marry', 'ADP')]
